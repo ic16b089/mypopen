@@ -139,6 +139,53 @@ FILE *mypopen(const char *command, const char *type) {
  *
  * Robert is working on it
  * */
-int mypclose(FILE *stream) {
-    return pclose(stream);
+ int mypclose(FILE *stream) {
+
+        //überprüfen ob mypopen schon aufgerufen wurde
+    if (child_pid < 0) {
+        errno = ECHILD;
+        return -1;
+    }
+
+    //überprüfen ob der richtige file-pointer übergeben wurde
+    if (fp_stream != stream) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    // stream schließen
+    if (fclose(stream) == EOF) {
+        // zurücksetzen da fclose() nicht nochmal aufgerufen werden darf
+		fp_stream = NULL;
+		child_pid = -1;
+        return -1;
+    }
+
+    // auf kindprozess warten
+    int status;
+    pid_t wpid;
+    while ((wpid = waitpid(child_pid, &status, 0)) != child_pid) {
+        if (wpid == -1) {
+            if (errno == EINTR) // only interrupted, wait again
+                continue;
+
+            errno = ECHILD;
+			fp_stream = NULL;
+			child_pid = -1;
+            return -1;
+        }
+    }
+
+    // globals zurücksetzen
+	fp_stream = NULL;
+	child_pid = -1;
+
+    // exit-status überprüfen
+    if (WIFEXITED(status))
+        return WEXITSTATUS(status);
+    else {
+        errno = ECHILD;
+        return -1;
+    }
 }
+
