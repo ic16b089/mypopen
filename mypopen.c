@@ -3,7 +3,7 @@
  * @file mypopen.c
  *
  * Beispiel 2
- *@brief This is a simple GNU-like popen and fclose Library
+ * @brief This is a simple GNU-like popen and fclose Library
  *
  * @author Dennis Addo <ic16b026>
  * @author Robert Niedermaier <ic16b089>
@@ -141,54 +141,63 @@ FILE *mypopen(const char *command, const char *type) {
 
 /**\brief
  * \param stream
- *
- * Robert is working on it
+ * close given stream and get sure child proc has terminated
  * */
  int mypclose(FILE *stream) {
 
 
  #if 1
 
-	//überprüfen ob mypopen schon aufgerufen wurde
+	//check if mypopen() and fork() already sucessfully have been called
+	//and a valid child process id is available
     if (child_pid < 0) {
         errno = ECHILD;
         return -1;
     }
 
-    //überprüfen ob der richtige file-pointer übergeben wurde
+    //check if there is an valid file-pointer available
     if (fp_stream != stream) {
         errno = EINVAL;
         return -1;
     }
 
-    // stream schließen
+    //close the given stream by using \param stream
     if (fclose(stream) == EOF) {
-        // zurücksetzen da fclose() nicht nochmal aufgerufen werden darf
+
+        //reset the global variables to ensure fclose() isn't called twice
 		fp_stream = NULL;
 		child_pid = -1;
+
         return -1;
     }
 
-    // auf kindprozess warten
+
     int status;
     pid_t wpid;
+
+    //waiting till child process has terminated
     while ((wpid = waitpid(child_pid, &status, 0)) != child_pid) {
         if (wpid == -1) {
-            if (errno == EINTR) // only interrupted, wait again
-                continue;
+
+        	//check if interrupt ouccured, if yes continue waiting
+        	//until child process has terminated
+            if (errno == EINTR) //check if interrupt ouccured, if yes continue waiting
+                continue;		
 
             errno = ECHILD;
+
 			fp_stream = NULL;
 			child_pid = -1;
+
             return -1;
         }
     }
 
-    // globals zurücksetzen
+    //reset the global variables
 	fp_stream = NULL;
 	child_pid = -1;
 
-    // exit-status überprüfen
+    //check exit status
     if (WIFEXITED(status))
         return WEXITSTATUS(status);
     else {
