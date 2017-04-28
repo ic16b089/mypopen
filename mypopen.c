@@ -29,6 +29,8 @@
 #define tpsr(a, b) (*type == 'r' ? (b) : (a))
 #define tpsw(a, b) (*type == 'w' ? (b) : (a))
 #endif
+
+//#define MY_PCLOSE
 /** Robert use this to help you in your implementation
  * */
 static FILE *fp_stream = NULL;
@@ -41,6 +43,8 @@ static const char *const shell_path = "/bin/sh";
  * \param type a specified output stream r-> read, w -> write mode/type
  * */
 FILE *mypopen(const char *command, const char *type) {
+
+
 
     int fileDis[2], parent_fd, child_fd;
 
@@ -131,6 +135,7 @@ FILE *mypopen(const char *command, const char *type) {
     }
 
     return fp_stream;
+
 }
 
 
@@ -141,7 +146,10 @@ FILE *mypopen(const char *command, const char *type) {
  * */
  int mypclose(FILE *stream) {
 
-        //überprüfen ob mypopen schon aufgerufen wurde
+
+ #if MY_PCLOSE
+
+	//überprüfen ob mypopen schon aufgerufen wurde
     if (child_pid < 0) {
         errno = ECHILD;
         return -1;
@@ -187,5 +195,12 @@ FILE *mypopen(const char *command, const char *type) {
         errno = ECHILD;
         return -1;
     }
+
+#else
+
+    return pclose(stream);
+
+#endif
+
 }
 
