@@ -35,7 +35,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-
+#include <sys/wait.h>
 
 /**\def
  * --------------------------------------------------------------- defines --

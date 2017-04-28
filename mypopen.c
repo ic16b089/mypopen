@@ -147,7 +147,7 @@ FILE *mypopen(const char *command, const char *type) {
  int mypclose(FILE *stream) {
 
 
- #if 0
+ #if 1
 
 	//überprüfen ob mypopen schon aufgerufen wurde
     if (child_pid < 0) {
@@ -198,7 +198,9 @@ FILE *mypopen(const char *command, const char *type) {
 
 #endif
 
+#if 0
     return pclose(stream);
+#endif
 
 }
 
